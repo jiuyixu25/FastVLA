@@ -1,16 +1,46 @@
+<div align="center">
+
 # FastVLA: Task-Conditioned and Temporally Adaptive Visual Token Compression for Efficient Vision-Language-Action Models
 
 Jiuyi Xu<sup>1</sup>, Chengyuan Qian<sup>2</sup>, Zhengzhong Tu<sup>2</sup>, Yang Sui<sup>3</sup>, Yangming Shi<sup>1</sup>
 
 <sup>1</sup>Colorado School of Mines &nbsp; <sup>2</sup>Texas A&M University &nbsp; <sup>3</sup>Microsoft AI
 
+</div>
+
 <!-- TODO: add the arXiv link once the paper is online -->
+
+<p align="center">
+  <img src="assets/overview.jpg" width="100%" alt="FastVLA overview">
+</p>
 
 FastVLA is a **training-free, plug-and-play** visual token compression method for Vision-Language-Action (VLA)
 models. At every action-prediction step it decides not only *which* visual tokens the policy needs, but also
 *how many*: the compression rate adapts from step to step to how concentrated the task-relevant visual evidence is.
 
-![FastVLA overview](https://github.com/user-attachments/assets/e2f2c575-bc12-4d37-a410-c535628c3230)
+## Highlights
+
+- **Training-free and plug-and-play.** No retraining and no caches: FastVLA only decides which visual tokens enter the
+  LLM backbone at each step.
+- **Task-conditioned.** Visual tokens are scored by task-to-vision attention, i.e. by what the current task needs
+  rather than by generic visual saliency.
+- **Temporally adaptive.** The number of kept tokens changes from step to step with the concentration of the
+  importance distribution (inverse-Simpson uniformity, calibrated online over a sliding window).
+- **Faster closed-loop control.** In simulation, FastVLA reduces LLM-backbone FLOPs by 35–59% and action latency by
+  9–32% (1.09×–1.46× speedup) at comparable task success; on a real Franka Research 3 robot, it cuts end-to-end latency
+  by 20% (1.25× speedup).
+
+## Demo
+
+<table>
+  <tr>
+    <td align="center" width="33%"><img src="assets/demo_libero.gif" width="100%" alt="LIBERO-Long rollout"><br><b>LIBERO-Long</b> · OpenVLA-OFT</td>
+    <td align="center" width="33%"><img src="assets/demo_simpler.gif" width="100%" alt="SIMPLER rollout"><br><b>SIMPLER</b> · CogACT</td>
+    <td align="center" width="33%"><img src="assets/demo_real.gif" width="100%" alt="Real-robot rollout"><br><b>Franka Research 3</b> · OpenVLA-OFT (2× speed)</td>
+  </tr>
+</table>
+
+Top row: the visual tokens kept by FastVLA (dropped tokens are shown in black). Bottom row: the original camera images.
 
 ## Method
 
@@ -28,7 +58,52 @@ FastVLA runs once per action-prediction step, on the LLM input sequence `[BOS | 
 
 There is no training, no cache, and no state across steps besides the `window` most recent uniformity values.
 
-| Code | |
+## Results
+
+All results are from the paper, measured on a single NVIDIA RTX 4090. Control frequency is the number of actions
+executed per second (an OpenVLA-OFT call predicts a chunk of 8 actions; OpenVLA and CogACT predict one action per call).
+FastVLA success rates are the mean ± standard error over three random seeds. Methods marked with * could not be
+reproduced in our setup; their numbers are quoted from the original papers.
+
+### LIBERO
+
+<p align="center">
+  <img src="assets/table_libero.png" width="100%" alt="Results on LIBERO">
+</p>
+
+ρ = 0.8 / 0.7 / 0.75 / 0.6 (Spatial / Object / Goal / 10) on OpenVLA-OFT and 0.35 / 0.5 / 0.4 / 0.3 on OpenVLA;
+τ = 0.1 and window = 10.
+
+### SIMPLER
+
+<p align="center">
+  <img src="assets/table_simpler.png" width="100%" alt="Results on SIMPLER">
+</p>
+
+CogACT-Base; ρ = 0.7 (Pick Coke Can), 0.5 (Move Near) and 0.3 (Open/Close Drawer, Put Apple in Drawer); τ = 0.1 and
+window = 10.
+
+### Real robot
+
+<p align="center">
+  <img src="assets/table_real.png" width="60%" alt="Results on a Franka Research 3 robot">
+</p>
+
+Franka Research 3; OpenVLA-OFT fine-tuned with LoRA on teleoperated demonstrations; 50 rollouts per task and method.
+
+### Visualization
+
+<p align="center">
+  <img src="assets/vis_libero.jpg" width="100%" alt="FastVLA on LIBERO-Long"><br>
+  <img src="assets/vis_real.jpg" width="100%" alt="FastVLA on a real robot">
+</p>
+
+Eight frames sampled uniformly over a LIBERO-Long rollout (top) and a real-world pick-and-place rollout (bottom), from
+the third-person camera. Each full observation is shown above the visual tokens kept by FastVLA.
+
+## Code
+
+| File | Description |
 |---|---|
 | [`fastvla/core.py`](fastvla/core.py) | the method (`FastVLA`), backbone-agnostic, depends only on PyTorch |
 | [`prismatic/extern/hf/modeling_prismatic.py`](prismatic/extern/hf/modeling_prismatic.py) | OpenVLA-OFT integration: `PrunedLlamaModel` applies FastVLA before the LLM decoder layers and measures LLM FLOPs / CUDA time |
