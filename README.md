@@ -6,9 +6,11 @@ Jiuyi Xu<sup>1</sup>, Chengyuan Qian<sup>2</sup>, Zhengzhong Tu<sup>2</sup>, Yan
 
 <sup>1</sup>Colorado School of Mines &nbsp; <sup>2</sup>Texas A&M University &nbsp; <sup>3</sup>Microsoft AI
 
-</div>
+**WACV 2027**
 
-<!-- TODO: add the arXiv link once the paper is online -->
+[![arXiv](https://img.shields.io/badge/arXiv-2610.22146-b31b1b.svg)](https://arxiv.org/abs/2610.22146)
+
+</div>
 
 <p align="center">
   <img src="assets/overview.jpg" width="100%" alt="FastVLA overview">
@@ -60,10 +62,10 @@ There is no training, no cache, and no state across steps besides the `window` m
 
 ## Results
 
-All results are from the paper, measured on a single NVIDIA RTX 4090. Control frequency is the number of actions
-executed per second (an OpenVLA-OFT call predicts a chunk of 8 actions; OpenVLA and CogACT predict one action per call).
-FastVLA success rates are the mean ± standard error over three random seeds. Methods marked with * could not be
-reproduced in our setup; their numbers are quoted from the original papers.
+All results are from the [paper](https://arxiv.org/abs/2610.22146), measured on a single NVIDIA RTX 4090. Control
+frequency is the number of actions executed per second (an OpenVLA-OFT call predicts a chunk of 8 actions; OpenVLA and
+CogACT predict one action per call). FastVLA success rates are the mean ± standard error over three random seeds.
+Methods marked with * could not be reproduced in our setup; their numbers are quoted from the original papers.
 
 ### LIBERO
 
@@ -224,6 +226,19 @@ python tests/test_fastvla.py
 ```
 
 runs CPU checks of the pruner (rate band, warm-up, fixed-rate case, sequence bookkeeping) and of `PrunedLlamaModel`.
+
+## Citation
+
+If you find FastVLA useful in your research, please cite:
+
+```bibtex
+@article{xu2026fastvla,
+  title   = {FastVLA: Task-Conditioned and Temporally Adaptive Visual Token Compression for Efficient Vision-Language-Action Models},
+  author  = {Xu, Jiuyi and Qian, Chengyuan and Tu, Zhengzhong and Sui, Yang and Shi, Yangming},
+  journal = {arXiv preprint arXiv:2610.22146},
+  year    = {2026}
+}
+```
 
 ## Acknowledgements
 
