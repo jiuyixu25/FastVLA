@@ -111,6 +111,7 @@ the third-person camera. Each full observation is shown above the visual tokens 
 | [`prismatic/extern/hf/modeling_prismatic.py`](prismatic/extern/hf/modeling_prismatic.py) | OpenVLA-OFT integration: `PrunedLlamaModel` applies FastVLA before the LLM decoder layers and measures LLM FLOPs / CUDA time |
 | [`experiments/robot/libero/run_libero_eval.py`](experiments/robot/libero/run_libero_eval.py) | LIBERO evaluation with `--fastvla_*` options |
 | [`vla-scripts/deploy.py`](vla-scripts/deploy.py) | policy server for real-robot deployment with `--fastvla_*` options |
+| [`integrations/openvla`](integrations/openvla) | FastVLA for the base OpenVLA model (LIBERO), on top of the official OpenVLA evaluation script |
 | [`integrations/cogact`](integrations/cogact) | FastVLA for CogACT (SIMPLER) |
 
 ## Installation
@@ -167,7 +168,30 @@ the calibration window. The paper uses τ = 0.1 and window = 10 throughout, and 
 | Backbone | Benchmark | ρ per suite / task |
 |---|---|---|
 | OpenVLA-OFT | LIBERO | Spatial 0.80 · Object 0.70 · Goal 0.75 · Long (LIBERO-10) 0.60 |
+| OpenVLA | LIBERO | Spatial 0.35 · Object 0.50 · Goal 0.40 · Long (LIBERO-10) 0.30 |
 | CogACT-Base | SIMPLER | Pick Coke Can 0.70 · Move Near 0.50 · Open/Close Drawer 0.30 · Put Apple in Drawer 0.30 |
+
+## OpenVLA (LIBERO)
+
+[`integrations/openvla/run_libero_eval_fastvla.py`](integrations/openvla/run_libero_eval_fastvla.py) adds FastVLA to
+the base OpenVLA model and runs the official OpenVLA LIBERO evaluation unchanged. Set up the
+[OpenVLA repository](https://github.com/openvla/openvla) and its LIBERO evaluation with the package versions OpenVLA
+pins (`transformers==4.40.1`, `flash-attn==2.5.5`; the simulator pins from [Installation](#installation) apply as well).
+FastVLA needs no extra installation: the script imports `fastvla` from this repository. From the root of the OpenVLA
+repository, run
+
+```bash
+python /path/to/FastVLA/integrations/openvla/run_libero_eval_fastvla.py \
+  --pretrained_checkpoint openvla/openvla-7b-finetuned-libero-spatial \
+  --task_suite_name libero_spatial --center_crop True \
+  --fastvla_rho 0.35 --fastvla_tau 0.1 --fastvla_window 10
+```
+
+and likewise for the other suites (checkpoints `openvla/openvla-7b-finetuned-libero-{spatial,object,goal,10}`, ρ from
+the table above). All other arguments go to OpenVLA's `experiments/robot/libero/run_libero_eval.py`; add
+`--fastvla_enable False` to evaluate the uncompressed model. At the end, the script prints the average action-prediction
+latency, the control frequency, the average LLM TFLOPs of the prefill pass (the pass that processes the visual tokens)
+and the average number of visual tokens kept.
 
 ## CogACT (SIMPLER)
 
